@@ -1,10 +1,25 @@
-import sys
+# -*- coding: utf-8 -*-
+# Copyright (C) 2009-2012 Ask Solem <askh@modwheel.net>
+#                         Fernando Perez <Fernando.Perez@berkeley.edu>
+#                         James Rowe <jnrowe@gmail.com>
+#                         Mark Paschal <markpasc@markpasc.org>
+#                         Patryk Zawadzki <patrys@pld-linux.org>
+#                         Sameer Al-Sakran <sameer@whitelabellabs.com>
+#                         Stéphane Angel <s.angel@twidi.com>
+#                         Vincent Driessen <vincent@datafox.nl>
+#
+# This file is part of python-github2, and is made available under the 3-clause
+# BSD license.  See LICENSE for the full details.
 
-from warnings import warn
+import logging
+import sys
 
 from datetime import datetime
 from dateutil import (parser, tz)
 
+
+#: Logger for core module
+LOGGER = logging.getLogger('github2.core')
 
 #: Running under Python 3
 PY3K = sys.version_info[0] == 3
@@ -25,9 +40,10 @@ NAIVE = True
 
 
 def string_to_datetime(string):
-    """Convert a string to Python datetime
+    """Convert a string to Python datetime.
 
     :param str github_date: date string to parse
+
     """
     parsed = parser.parse(string)
     if NAIVE:
@@ -36,9 +52,10 @@ def string_to_datetime(string):
 
 
 def _handle_naive_datetimes(f):
-    """Decorator to make datetime arguments use GitHub timezone
+    """Decorator to make datetime arguments use GitHub timezone.
 
     :param func f: Function to wrap
+
     """
     def wrapper(datetime_):
         if not datetime_.tzinfo:
@@ -57,18 +74,20 @@ def _handle_naive_datetimes(f):
 
 @_handle_naive_datetimes
 def datetime_to_ghdate(datetime_):
-    """Convert Python datetime to Github date string
+    """Convert Python datetime to GitHub date string.
 
     :param datetime datetime_: datetime object to convert
+
     """
     return datetime_.strftime(GITHUB_DATE_FORMAT)
 
 
 @_handle_naive_datetimes
 def datetime_to_commitdate(datetime_):
-    """Convert Python datetime to Github date string
+    """Convert Python datetime to GitHub date string.
 
     :param datetime datetime_: datetime object to convert
+
     """
     date_without_tz = datetime_.strftime(COMMIT_DATE_FORMAT)
     utcoffset = GITHUB_TZ.utcoffset(datetime_)
@@ -78,7 +97,7 @@ def datetime_to_commitdate(datetime_):
 
 
 def datetime_to_isodate(datetime_):
-    """Convert Python datetime to Github date string
+    """Convert Python datetime to GitHub date string.
 
     :param str datetime_: datetime object to convert
 
@@ -92,16 +111,18 @@ def datetime_to_isodate(datetime_):
 
 
 class AuthError(Exception):
-    """Requires authentication"""
+
+    """Requires authentication."""
 
 
 def requires_auth(f):
-    """Decorate to check a function call for authentication
+    """Decorate to check a function call for authentication.
 
     Sets a ``requires_auth`` attribute on functions, for use in introspection.
 
     :param func f: Function to wrap
     :raises AuthError: If function called without an authenticated session
+
     """
     # When Python 2.4 support is dropped move straight to functools.wraps,
     # don't pass go and don't collect $200.
@@ -111,19 +132,22 @@ def requires_auth(f):
                             % f.__name__)
         return f(self, *args, **kwargs)
     wrapped = wrapper
+    wrapped.__orig_func__ = f
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__ + """\n.. warning:: Requires authentication"""
+    wrapped.__module__ = f.__module__
     wrapped.requires_auth = True
     return wrapped
 
 
 def enhanced_by_auth(f):
-    """Decorator to mark a function as enhanced by authentication
+    """Decorator to mark a function as enhanced by authentication.
 
     Sets a ``enhanced_by_auth`` attribute on functions, for use in
     introspection.
 
     :param func f: Function to wrap
+
     """
     f.enhanced_by_auth = True
     f.__doc__ += """\n.. note:: This call is enhanced with authentication"""
@@ -132,10 +156,29 @@ def enhanced_by_auth(f):
 
 class GithubCommand(object):
 
+    """Main API binding interface."""
+
     def __init__(self, request):
+        """Setup command object.
+
+        :param github2.request.GithubRequest request: HTTP request handler
+
+        """
         self.request = request
 
     def make_request(self, command, *args, **kwargs):
+        """Make an API request.
+
+        Various options are supported if they exist in ``kwargs``:
+
+        * The value of a ``method`` argument will define the HTTP method
+          to perform for this request, the default is ``GET``
+        * The value of a ``filter`` argument will restrict the response to that
+          data
+        * The value of a ``page`` argument will be used to fetch a specific
+          page of results, default of 1 is assumed if not given
+
+        """
         filter = kwargs.get("filter")
         post_data = kwargs.get("post_data") or {}
         page = kwargs.pop("page", 1)
@@ -158,6 +201,12 @@ class GithubCommand(object):
         return response
 
     def get_value(self, *args, **kwargs):
+        """Process a single-value response from the API.
+
+        If a ``datatype`` parameter is given it defines the
+        :class:`BaseData`-derived class we should build from the provided data
+
+        """
         datatype = kwargs.pop("datatype", None)
         value = self.make_request(*args, **kwargs)
         if datatype:
@@ -165,19 +214,26 @@ class GithubCommand(object):
                 # unicode keys are not accepted as kwargs by python, until 2.7:
                 # http://bugs.python.org/issue2646
                 # So we make a local dict with the same keys but as strings:
-                return datatype(**dict((str(k), v) for (k, v) in value.items()))
+                return datatype(**dict((str(k), v)
+                                       for (k, v) in value.items()))
             else:
                 return datatype(**value)
         return value
 
     def get_values(self, *args, **kwargs):
+        """Process a multi-value response from the API.
+
+        :see: :meth:`get_value`
+
+        """
         datatype = kwargs.pop("datatype", None)
         values = self.make_request(*args, **kwargs)
         if datatype:
             if not PY27:
-                # Same as above, unicode keys will blow up in **args, so we need to
-                # create a new 'values' dict with string keys
-                return [datatype(**dict((str(k), v) for (k, v) in value.items()))
+                # Same as above, unicode keys will blow up in **args, so we
+                # need to create a new 'values' dict with string keys
+                return [datatype(**dict((str(k), v)
+                                        for (k, v) in value.items()))
                         for value in values]
             else:
                 return [datatype(**value) for value in values]
@@ -186,10 +242,11 @@ class GithubCommand(object):
 
 
 def doc_generator(docstring, attributes):
-    """Utility function to augment BaseDataType docstring
+    """Utility function to augment BaseDataType docstring.
 
     :param str docstring: docstring to augment
     :param dict attributes: attributes to add to docstring
+
     """
     docstring = docstring or ""
 
@@ -203,7 +260,14 @@ def doc_generator(docstring, attributes):
 
 class Attribute(object):
 
+    """Generic object attribute for use with :class:`BaseData`."""
+
     def __init__(self, help):
+        """Setup Attribute object.
+
+        :param str help: Attribute description
+
+        """
         self.help = help
 
     def to_python(self, value):
@@ -213,6 +277,9 @@ class Attribute(object):
 
 
 class DateAttribute(Attribute):
+
+    """Date handling attribute for use with :class:`BaseData`."""
+
     format = "github"
     converter_for_format = {
         "github": datetime_to_ghdate,
@@ -222,6 +289,12 @@ class DateAttribute(Attribute):
     }
 
     def __init__(self, *args, **kwargs):
+        """Setup DateAttribute object.
+
+        :param str format: The date format to support, see
+            :data:`convertor_for_format` for supported options
+
+        """
         self.format = kwargs.pop("format", self.format)
         super(DateAttribute, self).__init__(*args, **kwargs)
 
@@ -242,12 +315,11 @@ class BaseDataType(type):
         super_new = super(BaseDataType, cls).__new__
 
         _meta = dict([(attr_name, attr_value)
-                        for attr_name, attr_value in attrs.items()
-                            if isinstance(attr_value, Attribute)])
+                      for attr_name, attr_value in attrs.items()
+                      if isinstance(attr_value, Attribute)])
         attrs["_meta"] = _meta
         attributes = _meta.keys()
-        attrs.update(dict([(attr_name, None)
-                        for attr_name in attributes]))
+        attrs.update(dict([(attr_name, None) for attr_name in attributes]))
 
         def _contribute_method(name, func):
             func.__name__ = name
@@ -275,35 +347,47 @@ class BaseDataType(type):
 # Ugly base class definition for Python 2 and 3 compatibility, where metaclass
 # syntax is incompatible
 class BaseData(BaseDataType('BaseData', (object, ), {})):
+
+    """Wrapper for API responses.
+
+    .. warning::
+       Supports subscript attribute access purely for backwards compatibility,
+       you shouldn't rely on that functionality in new code
+
+    """
+
     def __getitem__(self, key):
-        """Access objects's attribute using subscript notation
+        """Access objects's attribute using subscript notation.
 
         This is here purely to maintain compatibility when switching ``dict``
         responses to ``BaseData`` derived objects.
+
         """
-        warn("Subscript access on %r is deprecated, use object attributes"
-                % self.__class__.__name__, DeprecationWarning)
+        LOGGER.warning("Subscript access on %r is deprecated, use object "
+                       "attributes" % self.__class__.__name__)
         if not key in self._meta.keys():
             raise KeyError(key)
         return getattr(self, key)
 
     def __setitem__(self, key, value):
-        """Update object's attribute using subscript notation
+        """Update object's attribute using subscript notation.
 
-        :see: ``BaseData.__getitem__``
+        :see: :meth:`BaseData.__getitem__`
+
         """
-        warn("Subscript access on %r is deprecated, use object attributes"
-                % self.__class__.__name__, DeprecationWarning)
+        LOGGER.warning("Subscript access on %r is deprecated, use object "
+                       "attributes" % self.__class__.__name__)
         if not key in self._meta.keys():
             raise KeyError(key)
         setattr(self, key, value)
 
 
 def repr_string(string):
-    """Shorten string for use in repr() output
+    """Shorten string for use in repr() output.
 
     :param str string: string to operate on
     :return: string, with maximum length of 20 characters
+
     """
     if len(string) > 20:
         string = string[:17] + '...'

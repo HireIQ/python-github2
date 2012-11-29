@@ -1,7 +1,8 @@
-.. python-github2 documentation master file, created by
-   sphinx-quickstart on Mon Apr 11 16:16:25 2011.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. Copyright (C) 2011-2012 James Rowe <jnrowe@gmail.com>
+
+   This file is part of python-github2, and is licensed under the 3-clause BSD
+   License.  See the LICENSE file in the top distribution directory for the full
+   license text.
 
 ..
   If you prefer you can also read the pre-built documentation at
@@ -10,23 +11,35 @@
 .. module:: github2
    :synopsis: GitHub API v2 library for Python
 
-``github2`` - Github API v2 library for Python
+``github2`` - GitHub API v2 library for Python
 ==============================================
+
+.. warning::
+
+   GitHub have marked API v2 as deprecated, you should be looking to replace
+   your usage of ``github2`` in the near future.
+
+   Both remoteobjects_ and micromodels_ provide easy-to-use functionality for
+   creating bindings to remote APIs, and should significantly reduce the amount
+   of work needed in moving away from GitHub's API v2.
+
+.. _remoteobjects: https://github.com/saymedia/remoteobjects
+.. _micromodels: https://github.com/j4mie/micromodels
 
 .. pypi-release:: github2
    :prefix: Download
    :class: sidebar
 
 This is a Python library implementing all of the features available in version 2
-of the `Github API`_.
+of the `GitHub API`_.
 
-You should read the developer documentation for the `Github API`_ first.
+You should read the developer documentation for the `GitHub API`_ first.
 
 :Git repository:  https://github.com/ask/python-github2/
 :Issue tracker:  https://github.com/ask/python-github2/issues/
 :Contributors:  https://github.com/ask/python-github2/contributors/
 
-.. _Github API: http://develop.github.com/
+.. _GitHub API: http://develop.github.com/
 
 Contents
 --------
@@ -41,6 +54,7 @@ Contents
    bugs
    contributing
    wild
+   release
    license
 
 Indices and tables

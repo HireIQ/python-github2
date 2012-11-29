@@ -1,3 +1,9 @@
+.. Copyright (C) 2011-2012 James Rowe <jnrowe@gmail.com>
+
+   This file is part of python-github2, and is licensed under the 3-clause BSD
+   License.  See the LICENSE file in the top distribution directory for the full
+   license text.
+
 Quickstart
 ==========
 
@@ -7,6 +13,7 @@ package.
 
 Create an unauthenticated client object::
 
+    >>> from github2.client import Github
     >>> github = Github()
 
 .. note::
@@ -22,6 +29,7 @@ Read the description of the ``python-github2`` project::
 
     >>> repo = github.repos.show("ask/python-github2")
     >>> repo.description
+    u'github client in python, with issues support.'
 
 We can take advantage of Python's :func:`dir` to explore the package a
 little more::

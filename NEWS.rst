@@ -6,7 +6,22 @@ look at the `git repository`_ for the full project history.
 
 .. _git repository: https://github.com/ask/python-github2/
 
-.. contents::
+0.6.2 - 2012-06-11
+------------------
+
+* Updated dependencies to handle recent ``python-dateutil`` releases
+* Fixed ``simplejson`` dependencies for Python 2.4
+
+0.6.1 - 2012-02-28
+------------------
+
+* Support for `GitHub:Enterprise`_ using the ``github_url`` parameter when
+  creating a client
+* Adds SSH key management
+* Support reading SSL certificates from the location set in ``CURL_CA_BUNDLE``,
+  if all else fails
+
+.. _GitHub:Enterprise: https://enterprise.github.com/
 
 0.6.0 - 2011-12-21
 ------------------

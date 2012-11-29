@@ -1,3 +1,11 @@
+.. Copyright (C) 2011-2012 James Rowe <jnrowe@gmail.com>
+                           Michael Basnight <mbasnight@gmail.com>
+                           modocache <modocache@gmail.com>
+
+   This file is part of python-github2, is licensed under the 3-clause BSD
+   License.  See the LICENSE file in the top distribution directory for the full
+   license text.
+
 .. module:: github2.client
 
 Creating a client
@@ -42,12 +50,25 @@ API calls are limited by github.com to 1 per second by default.  To have the
     >>> github = Github(username="ask", api_token=".......",
     ...                 requests_per_second=1)
 
-If you wish to use a HTTP proxy you can pass in the ``proxy_host`` and
-``proxy_port`` settings to enable it.  The default for ``proxy_port``, if not
-given, is 8080::
+By default, :pypi:`httplib2 (0.7.4)` will use the proxies set in the
+:envvar:`http_proxy` andr :envvar:`https_proxy` environment variables.  This
+means that well configured systems shouldn't need any manual configuration for
+proxy support.
+
+If you wish to manually configure a HTTP proxy you can pass in the
+``proxy_host`` and ``proxy_port`` settings to enable it.  The default for
+``proxy_port``, if not given, is 8080::
 
     >>> from github2.client import Github
     >>> github = Github(username="ask", api_token=".......",
     ...                 proxy_host="my.proxy.com", proxy_port=9000)
+
+You may specify a GitHub Enterprise URL by passing in the ``github_url``
+setting.  If you do not specify ``github_url``, requests will be made to
+https://github.com/.
+
+    >>> from github2.client import Github
+    >>> github = Github(username="modocache", api_token=".......",
+    ...                 github_url="http://your-github-enterprise-url.com/")
 
 .. _OAuth service: http://develop.github.com/p/oauth.html

@@ -1,12 +1,24 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) 2010-2012 Christopher MacGown <ignoti+github@gmail.com>
+#                         Ionuț Arțăriși <mapleoin@lavabit.com>
+#                         James Rowe <jnrowe@gmail.com>
+#                         Stéphane Angel <s.angel@twidi.com>
+#
+# This file is part of python-github2, and is made available under the 3-clause
+# BSD license.  See LICENSE for the full details.
+
 from github2.core import (BaseData, GithubCommand, Attribute, DateAttribute,
                           repr_string)
 
 
 class PullRequest(BaseData):
-    """Pull request encapsulation
+
+    """Pull request container.
 
     .. versionadded:: 0.5.0
+
     """
+
     state = Attribute("The pull request state")
     base = Attribute("The base repo")
     head = Attribute("The head of the pull request")
@@ -22,14 +34,14 @@ class PullRequest(BaseData):
     patch_url = Attribute("The URL to the downloadable patch.")
     labels = Attribute("A list of labels attached to the pull request.")
     html_url = Attribute("The URL to the pull request.")
-    issue_created_at = DateAttribute("The date the issue for this pull request was opened.",
-                                     format='iso')
-    issue_updated_at = DateAttribute("The date the issue for this pull request was last updated.",
-                                     format='iso')
+    issue_created_at = DateAttribute("The date the issue for this pull "
+                                     "request was opened.", format='iso')
+    issue_updated_at = DateAttribute("The date the issue for this pull "
+                                     "request was last updated.", format='iso')
     created_at = DateAttribute("The date when this pull request was created.",
                                format='iso')
-    updated_at = DateAttribute("The date when this pull request was last updated.",
-                               format='iso')
+    updated_at = DateAttribute("The date when this pull request was last "
+                               "updated.", format='iso')
     closed_at = DateAttribute("The date when this pull request was closed",
                               format='iso')
     discussion = Attribute("Discussion thread for the pull request.")
@@ -40,25 +52,29 @@ class PullRequest(BaseData):
 
 
 class PullRequests(GithubCommand):
-    """Operations on pull requests
+
+    """GitHub API pull request functionality.
 
     .. versionadded:: 0.5.0
+
     """
+
     domain = "pulls"
 
     def create(self, project, base, head, title=None, body=None, issue=None):
-        """Create a new pull request
+        """Create a new pull request.
 
         Pull requests can be created from scratch, or attached to an existing
         issue.  If an ``issue`` parameter is supplied the pull request is
         attached to that issue, else a new pull request is created.
 
-        :param str project: the Github project to send the pull request to
+        :param str project: the GitHub project to send the pull request to
         :param str base: branch changes should be pulled into
         :param str head: branch of the changes to be pulled
         :param str title: title for pull request
         :param str body: optional body for pull request
         :param str issue: existing issue to attach pull request to
+
         """
         post_data = {"base": base, "head": head}
         if issue:
@@ -76,20 +92,22 @@ class PullRequests(GithubCommand):
                               filter="pull", datatype=PullRequest)
 
     def show(self, project, number):
-        """Show a single pull request
+        """Show a single pull request.
 
-        :param str project: Github project
-        :param int number: pull request number in the Github database
+        :param str project: GitHub project
+        :param int number: pull request number in the GitHub database
+
         """
         return self.get_value(project, str(number), filter="pull",
                               datatype=PullRequest)
 
     def list(self, project, state="open", page=1):
-        """List all pull requests for a project
+        """List all pull requests for a project.
 
-        :param str project: Github project
+        :param str project: GitHub project
         :param str state: can be either ``open`` or ``closed``
         :param int page: optional page number
+
         """
         return self.get_values(project, state, filter="pulls",
                                datatype=PullRequest, page=page)

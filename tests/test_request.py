@@ -1,12 +1,17 @@
+# Copyright (C) 2011-2012 James Rowe <jnrowe@gmail.com>
+#
+# This file is part of python-github2, and is made available under the 3-clause
+# BSD license.  See LICENSE for the full details.
+
 import unittest
 
 try:
     from urllib.parse import parse_qs  # For Python 3
 except ImportError:
     try:
-        from urlparse import parse_qs
+        from urlparse import parse_qs  # NOQA
     except ImportError:  # For Python <2.6
-        from cgi import parse_qs
+        from cgi import parse_qs  # NOQA
 
 try:
     from nose.tools import (assert_dict_contains_subset, assert_dict_equal)
@@ -14,8 +19,8 @@ except ImportError:  # for Python <2.7
     import unittest2
 
     _binding = unittest2.TestCase('run')
-    assert_dict_contains_subset = _binding.assertDictContainsSubset
-    assert_dict_equal = _binding.assertDictEqual
+    assert_dict_contains_subset = _binding.assertDictContainsSubset  # NOQA
+    assert_dict_equal = _binding.assertDictEqual  # NOQA
 
 
 from github2 import request
@@ -30,7 +35,9 @@ def assert_params_contain(first, second):
 
 
 class TestAuthEncode(unittest.TestCase):
-    """Test processing of authentication data"""
+
+    """Test processing of authentication data."""
+
     def setUp(self):
         self.r = request.GithubRequest()
 

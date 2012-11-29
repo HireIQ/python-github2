@@ -1,3 +1,24 @@
+# Copyright (C) 2009-2012 Adam Vandenberg <flangy@gmail.com>
+#                         Asheesh Laroia <asheesh@openhatch.org>
+#                         Ask Solem <askh@modwheel.net>
+#                         Chris Vale <crispywalrus@gmail.com>
+#                         Daniel Greenfeld <pydanny@gmail.com>
+#                         Evan Broder <broder@mit.edu>
+#                         James Rowe <jnrowe@gmail.com>
+#                         Jeremy Dunck <jdunck@gmail.com>
+#                         Josh Weinberg <daemoncollector@gmail.com>
+#                         Mark Paschal <markpasc@markpasc.org>
+#                         Maximillian Dornseif <m.dornseif@hudora.de>
+#                         Michael Basnight <mbasnight@gmail.com>
+#                         Patryk Zawadzki <patrys@pld-linux.org>
+#                         Rick Harris <rick.harris@rackspace.com>
+#                         Sameer Al-Sakran <sameer@whitelabellabs.com>
+#                         Vincent Driessen <vincent@datafox.nl>
+#                         modocache <modocache@gmail.com>
+#
+# This file is part of python-github2, and is made available under the 3-clause
+# BSD license.  See LICENSE for the full details.
+
 import datetime
 import logging
 import re
@@ -8,60 +29,74 @@ try:
     # For Python 3
     from http.client import responses
 except ImportError:  # For Python 2.5-2.7
-    from httplib import responses
-except ImportError:  # For Python 2.4
-    from BaseHTTPServer import BaseHTTPRequestHandler
-    responses = dict([(k, v[0])
-                      for k, v in BaseHTTPRequestHandler.responses.items()])
+    try:
+        from httplib import responses  # NOQA
+    except ImportError:  # For Python 2.4
+        from BaseHTTPServer import BaseHTTPRequestHandler as _BHRH
+        responses = dict([(k, v[0]) for k, v in _BHRH.responses.items()])  # NOQA
 try:
     import json as simplejson  # For Python 2.6+
 except ImportError:
-    import simplejson
-from os import path
+    import simplejson  # NOQA
+from os import (getenv, path)
 try:
     # For Python 3
     from urllib.parse import (parse_qs, quote, urlencode, urlsplit, urlunsplit)
 except ImportError:
-    from urlparse import (urlsplit, urlunsplit)
+    from urlparse import (urlsplit, urlunsplit)  # NOQA
     try:
-        from urlparse import parse_qs
+        from urlparse import parse_qs  # NOQA
     except ImportError:
-        from cgi import parse_qs
-    from urllib import urlencode, quote
+        from cgi import parse_qs  # NOQA
+    from urllib import urlencode, quote  # NOQA
 
 import httplib2
 
 
 #: Hostname for API access
-GITHUB_URL = "https://github.com"
+DEFAULT_GITHUB_URL = "https://github.com"
 
 #: Logger for requests module
 LOGGER = logging.getLogger('github2.request')
 
+# Fetch actual path for httplib2's default cert bundle, for distributions that
+# symlink their system certs
+_HTTPLIB2_BUNDLE = path.realpath(path.dirname(httplib2.CA_CERTS))
 #: Whether github2 is using the system's certificates for SSL connections
-SYSTEM_CERTS = not httplib2.CA_CERTS.startswith(path.dirname(httplib2.__file__))
+SYSTEM_CERTS = not _HTTPLIB2_BUNDLE.startswith(path.dirname(httplib2.__file__))
+CA_CERTS = None
+#: Whether github2 is using the cert's from the file given in $CURL_CA_BUNDLE
+CURL_CERTS = False
 if not SYSTEM_CERTS and sys.platform.startswith('linux'):
     for cert_file in ['/etc/ssl/certs/ca-certificates.crt',
                       '/etc/pki/tls/certs/ca-bundle.crt']:
         if path.exists(cert_file):
-            httplib2.CA_CERTS = cert_file
+            CA_CERTS = cert_file
             SYSTEM_CERTS = True
             break
 elif not SYSTEM_CERTS and sys.platform.startswith('freebsd'):
     if path.exists('/usr/local/share/certs/ca-root-nss.crt'):
-        httplib2.CA_CERTS = '/usr/local/share/certs/ca-root-nss.crt'
+        CA_CERTS = '/usr/local/share/certs/ca-root-nss.crt'
         SYSTEM_CERTS = True
-if SYSTEM_CERTS:
-    LOGGER.info('Using system certificates in %r', httplib2.CA_CERTS)
-else:
-    LOGGER.warning('Using bundled certificates for HTTPS connections')
+elif path.exists(getenv('CURL_CA_BUNDLE', '')):
+    CA_CERTS = getenv('CURL_CA_BUNDLE')
+    CURL_CERTS = True
+if not SYSTEM_CERTS and not CURL_CERTS:
+    CA_CERTS = path.join(path.dirname(path.abspath(__file__)),
+                         "DigiCert_High_Assurance_EV_Root_CA.crt")
+
+
+# Common missing entries from the HTTP status code dict, basically anything
+# GitHub reports that isn't basic HTTP/1.1.
+responses[422] = 'Unprocessable Entity'
 
 
 def charset_from_headers(headers):
-    """Parse charset from headers
+    """Parse charset from headers.
 
     :param httplib2.Response headers: Request headers
     :return: Defined encoding, or default to ASCII
+
     """
     match = re.search("charset=([^ ;]+)", headers.get('content-type', ""))
     if match:
@@ -72,17 +107,21 @@ def charset_from_headers(headers):
 
 
 class GithubError(Exception):
-    """An error occured when making a request to the Github API."""
+
+    """An error occurred when making a request to the GitHub API."""
 
 
 class HttpError(RuntimeError):
-    """A HTTP error occured when making a request to the Github API."""
+
+    """A HTTP error occured when making a request to the GitHub API."""
+
     def __init__(self, message, content, code):
-        """Create a HttpError exception
+        """Create a HttpError exception.
 
         :param str message: Exception string
         :param str content: Full content of HTTP request
         :param int code: HTTP status code
+
         """
         self.args = (message, content, code)
         self.message = message
@@ -91,11 +130,19 @@ class HttpError(RuntimeError):
         if responses and code in responses:
             self.code_reason = responses[code]
         else:
-            self.code_reason = ""
+            self.code_reason = "<unknown status code>"
+            LOGGER.warning('Unknown HTTP status %r, please file an issue',
+                           code)
 
 
 class GithubRequest(object):
-    github_url = GITHUB_URL
+
+    """Make an API request.
+
+    :see: :class:`github2.client.Github`
+
+    """
+
     url_format = "%(github_url)s/api/%(api_version)s/%(api_format)s"
     api_version = "v2"
     api_format = "json"
@@ -103,15 +150,16 @@ class GithubRequest(object):
 
     def __init__(self, username=None, api_token=None, url_prefix=None,
                  requests_per_second=None, access_token=None,
-                 cache=None, proxy_host=None, proxy_port=None):
-        """Make an API request.
-
-        :see: :class:`github2.client.Github`
-        """
+                 cache=None, proxy_host=None, proxy_port=None,
+                 github_url=None):
         self.username = username
         self.api_token = api_token
         self.access_token = access_token
         self.url_prefix = url_prefix
+        if github_url is None:
+            self.github_url = DEFAULT_GITHUB_URL
+        else:
+            self.github_url = github_url
         if requests_per_second is None:
             self.delay = 0
         else:
@@ -129,9 +177,13 @@ class GithubRequest(object):
             proxy_info = httplib2.ProxyInfo(httplib2.socks.PROXY_TYPE_HTTP,
                                             proxy_host, proxy_port)
             self._http = httplib2.Http(proxy_info=proxy_info, cache=cache)
-        if not SYSTEM_CERTS:
-            self._http.ca_certs = path.join(path.dirname(path.abspath(__file__)),
-                                            "DigiCert_High_Assurance_EV_Root_CA.crt")
+        self._http.ca_certs = CA_CERTS
+        if SYSTEM_CERTS:
+            LOGGER.info('Using system certificates in %r', CA_CERTS)
+        elif CURL_CERTS:
+            LOGGER.info("Using cURL's certificates in %r", CA_CERTS)
+        else:
+            LOGGER.warning('Using bundled certificate for HTTPS connections')
 
     def encode_authentication_data(self, extra_post_data):
         post_data = []
@@ -169,11 +221,10 @@ class GithubRequest(object):
 
     def make_request(self, path, extra_post_data=None, method="GET"):
         if self.delay:
-            since_last = (datetime.datetime.now() - self.last_request)
-            since_last_in_seconds = (since_last.days * 24 * 60 * 60) + since_last.seconds + (since_last.microseconds/1000000.0)
-            if since_last_in_seconds < self.delay:
-                duration = self.delay - since_last_in_seconds
-                LOGGER.warning("delaying API call %s second(s)", duration)
+            since_last = (datetime.datetime.utcnow() - self.last_request)
+            if since_last.days == 0 and since_last.seconds < self.delay:
+                duration = self.delay - since_last.seconds
+                LOGGER.warning("delaying API call %g second(s)", duration)
                 time.sleep(duration)
 
         extra_post_data = extra_post_data or {}
@@ -181,7 +232,7 @@ class GithubRequest(object):
         result = self.raw_request(url, extra_post_data, method=method)
 
         if self.delay:
-            self.last_request = datetime.datetime.now()
+            self.last_request = datetime.datetime.utcnow()
         return result
 
     def raw_request(self, url, extra_post_data, method="GET"):

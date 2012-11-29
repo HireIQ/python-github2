@@ -1,12 +1,18 @@
+.. Copyright (C) 2011-2012 James Rowe <jnrowe@gmail.com>
+
+   This file is part of python-github2, and is licensed under the 3-clause BSD
+   License.  See the LICENSE file in the top distribution directory for the full
+   license text.
+
 Contributing
 ============
 
 Patches for :mod:`github2` are most welcome!
 
 Forks on GitHub_ and patches attached to issues are both great ways to
-contribute.  If you're comfortable with ``git`` using a fork hosted on GitHub is
-probably the simpler solution, both for the package maintainers and you as a
-contributor.
+contribute.  If you're comfortable with ``git`` then using a fork hosted on
+GitHub is probably the simpler solution, both for the :mod:`github2` maintainers
+and for you as a contributor.
 
 Following the simple guidelines below makes it easier to review and integrate
 your changes:
@@ -71,9 +77,9 @@ Many assertions, such as :meth:`~unittest.TestCase.assertIn` and
 The simple workaround is to evaluate an expression to test with
 :meth:`~unittest.TestCase.assertTrue`
 
-The incredibly functions for skipping tests(:func:`~unittest.skip`) and marking
-expected failures(:func:`~unittest.expectedFailure`) were only added in 2.7, and
-unfortunately can't be used.
+The incredibly useful functions for skipping tests(:func:`~unittest.skip`) and
+marking expected failures(:func:`~unittest.expectedFailure`) were only added in
+2.7, and unfortunately can't be used.
 
 .. todo::
    Add topic branches and pull request usage examples, but most git users are

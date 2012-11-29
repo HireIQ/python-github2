@@ -8,8 +8,11 @@ R/W access to all private repositories of the company account.
 """
 
 # Created by Maximillian Dornseif on 2009-12-31 for HUDORA.
-# Copyright (c) 2009 HUDORA. All rights reserved.
-# BSD licensed
+# Copyright (C) 2009-2012 James Rowe <jnrowe@gmail.com>
+#                         Maximillian Dornseif <m.dornseif@hudora.de>
+#
+# This file is part of python-github2, and is made available under the 3-clause
+# BSD license.  See LICENSE for the full details.
 
 import logging
 import sys
@@ -24,9 +27,11 @@ PY3K = sys.version_info[0] == 3 and True or False
 
 
 def print_(text):
-    """Python 2 & 3 compatible print function
+    """Python 2 & 3 compatible print function.
 
-    We support <2.6, so can't use __future__.print_function"""
+    We support <2.6, so can't use __future__.print_function
+
+    """
     if PY3K:
         print(text)
     else:
@@ -34,7 +39,7 @@ def print_(text):
 
 
 def parse_commandline():
-    """Parse the comandline and return parsed options."""
+    """Parse the command line and return parsed options."""
 
     parser = OptionParser()
     parser.description = __doc__
@@ -58,11 +63,14 @@ def parse_commandline():
     if len(args) not in [1, 2]:
         parser.error('wrong number of arguments')
     if (len(args) == 1 and args[0] in ['add', 'remove']):
-        parser.error('%r needs a collaborator name as second parameter\n' % args[0])
+        parser.error('%r needs a collaborator name as second parameter\n'
+                     % args[0])
     elif (len(args) == 1 and args[0] != 'list'):
-        parser.error('unknown command %r. Try "list", "add" or "remove"\n' % args[0])
+        parser.error('unknown command %r. Try "list", "add" or "remove"\n'
+                     % args[0])
     if (len(args) == 2 and args[0] not in ['add', 'remove']):
-        parser.error('unknown command %r. Try "list", "add" or "remove"\n' % args[0])
+        parser.error('unknown command %r. Try "list", "add" or "remove"\n'
+                     % args[0])
     if not options.login:
         parser.error('you must provide --login information\n')
 
@@ -70,7 +78,7 @@ def parse_commandline():
 
 
 def main():
-    """This implements the actual program functionality"""
+    """Implement the actual program functionality."""
 
     options, args = parse_commandline()
 
@@ -88,12 +96,15 @@ def main():
                         datefmt="%Y-%m-%dT%H:%M:%S")
     if len(args) == 1:
         for repos in github.repos.list(options.account):
-            fullreposname = github.project_for_user_repo(options.account, repos.name)
-            print_("%s: %s" % (repos.name, ' '.join(github.repos.list_collaborators(fullreposname))))
+            fullreposname = github.project_for_user_repo(options.account,
+                                                         repos.name)
+            collabs = github.repos.list_collaborators(fullreposname)
+            print_("%s: %s" % (repos.name, ' '.join(collabs)))
     elif len(args) == 2:
         command, collaborator = args
         for repos in github.repos.list(options.account):
-            fullreposname = github.project_for_user_repo(options.account, repos.name)
+            fullreposname = github.project_for_user_repo(options.account,
+                                                         repos.name)
             if collaborator in github.repos.list_collaborators(fullreposname):
                 if command == 'remove':
                     github.repos.remove_collaborator(repos.name, collaborator)

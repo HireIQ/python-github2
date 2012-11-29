@@ -1,3 +1,8 @@
+# Copyright (C) 2010-2012 Ask Solem <askh@modwheel.net>
+#
+# This file is part of python-github2, and is made available under the 3-clause
+# BSD license.  See LICENSE for the full details.
+
 import sys
 import optparse
 from subprocess import Popen, PIPE
@@ -10,10 +15,10 @@ URL_USER_FMT = "http://github.com/%s"
 OPTION_LIST = (
     optparse.make_option('-t', '--api-token',
             default=None, action="store", dest="api_token", type="str",
-            help="Github API token. Default is to find this from git config"),
+            help="GitHub API token. Default is to find this from git config"),
     optparse.make_option('-u', '--api-user',
             default=None, action="store", dest="api_user", type="str",
-            help="Github Username. Default is to find this from git config"),
+            help="GitHub Username. Default is to find this from git config"),
 )
 BY_LOWER = lambda value: value.lower()
 

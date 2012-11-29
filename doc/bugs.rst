@@ -1,3 +1,9 @@
+.. Copyright (C) 2011-2012 James Rowe <jnrowe@gmail.com>
+
+   This file is part of python-github2, and is licensed under the 3-clause BSD
+   License.  See the LICENSE file in the top distribution directory for the full
+   license text.
+
 Reporting bugs
 ==============
 
@@ -24,7 +30,7 @@ or a deficiency in the API.
 
 You can check which URLs your code is requesting by enabling
 :data:`~logging.DEBUG` level output in your logger, see the
-:mod:`python:logging` for more information.
+:mod:`python:logging` documentation for details.
 
 If the bug you've found is outside the reach of this project an issue should be
 opened in GitHub's `API support forum`_.  It doesn't hurt to `report an issue`_
@@ -45,10 +51,10 @@ A good bug report will have the following:
 * A minimal test-case to reproduce the error
 * A list of solutions you've already tried
 
-Simon Tatham has an excellent essay titled `How to Report Bugs Effectively`_,
+Simon Tatham wrote aa fantastic essay titled `How to Report Bugs Effectively`_,
 with some excellent tips on filing good bug reports.
 
-.. [#] The content of :data:`github2.__version__` if you're using an official
+.. [#] The value of :data:`github2.__version__` if you're using an official
    release, or the output of :command:`git describe` if you're using the git
    repository directly.
 
